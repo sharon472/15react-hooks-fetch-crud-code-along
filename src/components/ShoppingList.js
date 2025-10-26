@@ -1,36 +1,45 @@
-import React, { useState } from "react";
-import ItemForm from "./ItemForm";
-import Filter from "./Filter";
-import Item from "./Item";
 
-function ShoppingList() {
-  const [selectedCategory, setSelectedCategory] = useState("All");
-  const [items, setItems] = useState([]);
 
-  function handleCategoryChange(category) {
-    setSelectedCategory(category);
+// src/components/Item.js
+import React from "react";
+
+function Item({ item, onUpdateItem, onDeleteItem }) {
+  function handleAddToCartClick() {
+    fetch(`http://localhost:4000/items/${item.id}`, {
+      method: "PATCH",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        isInCart: !item.isInCart,
+      }),
+    })
+      .then((r) => r.json())
+      .then((updatedItem) => onUpdateItem(updatedItem));
   }
 
-  const itemsToDisplay = items.filter((item) => {
-    if (selectedCategory === "All") return true;
-
-    return item.category === selectedCategory;
-  });
+  function handleDeleteClick() {
+    fetch(`http://localhost:4000/items/${item.id}`, {
+      method: "DELETE",
+    })
+      .then(() => onDeleteItem(item));
+  }
 
   return (
-    <div className="ShoppingList">
-      <ItemForm />
-      <Filter
-        category={selectedCategory}
-        onCategoryChange={handleCategoryChange}
-      />
-      <ul className="Items">
-        {itemsToDisplay.map((item) => (
-          <Item key={item.id} item={item} />
-        ))}
-      </ul>
-    </div>
+    <li className={item.isInCart ? "in-cart" : ""}>
+      <span>{item.name}</span>
+      <span className="category">{item.category}</span>
+      <button
+        className={item.isInCart ? "remove" : "add"}
+        onClick={handleAddToCartClick}
+      >
+        {item.isInCart ? "Remove From" : "Add to"} Cart
+      </button>
+      <button className="remove" onClick={handleDeleteClick}>
+        Delete
+      </button>
+    </li>
   );
 }
 
-export default ShoppingList;
+export default Item;

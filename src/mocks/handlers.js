@@ -10,30 +10,46 @@ export function resetData() {
 }
 
 export const handlers = [
-  rest.get("http://localhost:4000/items", (req, res, ctx) => {
+  // GET all items
+  rest.get("http://localhost:3000/items", (req, res, ctx) => {
     return res(ctx.json(items));
   }),
-  rest.post("http://localhost:4000/items", (req, res, ctx) => {
+
+  // POST new item
+  rest.post("http://localhost:3000/items", async (req, res, ctx) => {
+    const body = await req.json();
     id++;
-    const item = { id, ...req.body };
+    const item = { id, ...body };
     items.push(item);
     return res(ctx.json(item));
   }),
-  rest.delete("http://localhost:4000/items/:id", (req, res, ctx) => {
+
+  // DELETE item
+  rest.delete("http://localhost:3000/items/:id", (req, res, ctx) => {
     const { id } = req.params;
-    if (isNaN(parseInt(id))) {
+    const itemId = parseInt(id);
+    if (isNaN(itemId)) {
       return res(ctx.status(404), ctx.json({ message: "Invalid ID" }));
     }
-    items = items.filter((q) => q.id !== parseInt(id));
-    return res(ctx.json({}));
+    items = items.filter((item) => item.id !== itemId);
+    return res(ctx.status(200));
   }),
-  rest.patch("http://localhost:4000/items/:id", (req, res, ctx) => {
+
+  // PATCH item
+  rest.patch("http://localhost:3000/items/:id", async (req, res, ctx) => {
     const { id } = req.params;
-    if (isNaN(parseInt(id))) {
+    const itemId = parseInt(id);
+    if (isNaN(itemId)) {
       return res(ctx.status(404), ctx.json({ message: "Invalid ID" }));
     }
-    const itemIndex = items.findIndex((item) => item.id === parseInt(id));
-    items[itemIndex] = { ...items[itemIndex], ...req.body };
-    return res(ctx.json(items[itemIndex]));
+
+    const body = await req.json();
+    const index = items.findIndex((item) => item.id === itemId);
+    if (index === -1) {
+      return res(ctx.status(404), ctx.json({ message: "Item not found" }));
+    }
+
+    items[index] = { ...items[index], ...body };
+    return res(ctx.json(items[index]));
   }),
 ];
